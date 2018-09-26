@@ -251,6 +251,8 @@
                 this.clicking = true;
               };
               events.on['focus'] = () => { // focus 选中
+                this.select(item, menuIndex);
+                this.$nextTick(() => this.scrollMenu(this.$refs.menus[menuIndex]));
                 if (this.clicking) {
                   this.clicking = false;
                   return;

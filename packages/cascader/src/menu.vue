@@ -43,7 +43,8 @@
         popperClass: '',
         hoverTimer: 0,
         clicking: false,
-        id: generateId()
+        id: generateId(),
+        selectAllLevels: false
       };
     },
 
@@ -251,8 +252,10 @@
                 this.clicking = true;
               };
               events.on['focus'] = () => { // focus 选中
-                this.select(item, menuIndex);
-                this.$nextTick(() => this.scrollMenu(this.$refs.menus[menuIndex]));
+                if (this.selectAllLevels) { // edit start
+                  this.select(item, menuIndex);
+                  this.$nextTick(() => this.scrollMenu(this.$refs.menus[menuIndex]));
+                } // end
                 if (this.clicking) {
                   this.clicking = false;
                   return;

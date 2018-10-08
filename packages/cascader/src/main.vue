@@ -148,6 +148,7 @@ export default {
       default: false
     },
     changeOnSelect: Boolean,
+    selectAllLevels: Boolean,
     popperClass: String,
     expandTrigger: {
       type: String,
@@ -264,6 +265,7 @@ export default {
       this.menu.changeOnSelect = this.changeOnSelect;
       this.menu.popperClass = this.popperClass;
       this.menu.hoverThreshold = this.hoverThreshold;
+      this.menu.selectAllLevels = this.selectAllLevels;
       this.popperElm = this.menu.$el;
       this.menu.$refs.menus[0].setAttribute('id', `cascader-menu-${this.id}`);
       this.menu.$on('pick', this.handlePick);

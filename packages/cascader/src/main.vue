@@ -122,7 +122,8 @@ export default {
           children: 'children',
           label: 'label',
           value: 'value',
-          disabled: 'disabled'
+          disabled: 'disabled',
+          disableSelect: 'disableSelect'
         };
       }
     },
@@ -149,6 +150,7 @@ export default {
     },
     changeOnSelect: Boolean,
     selectAllLevels: Boolean,
+    filterInLevel: Boolean,
     popperClass: String,
     expandTrigger: {
       type: String,
@@ -201,6 +203,9 @@ export default {
     },
     disabledKey() {
       return this.props.disabled || 'disabled';
+    },
+    disableSelectKey() {
+      return this.props.disableSelect || 'disableSelect';
     },
     currentLabels() {
       let options = this.options;
@@ -266,6 +271,7 @@ export default {
       this.menu.popperClass = this.popperClass;
       this.menu.hoverThreshold = this.hoverThreshold;
       this.menu.selectAllLevels = this.selectAllLevels;
+      this.menu.filterInLevel = this.filterInLevel;
       this.popperElm = this.menu.$el;
       this.menu.$refs.menus[0].setAttribute('id', `cascader-menu-${this.id}`);
       this.menu.$on('pick', this.handlePick);
@@ -338,7 +344,6 @@ export default {
         this.$nextTick(this.updatePopper);
         return;
       }
-
       let filteredFlatOptions = flatOptions.filter(optionsStack => {
         return optionsStack.some(option => new RegExp(escapeRegexpString(value), 'i')
           .test(option[this.labelKey]));
@@ -350,7 +355,8 @@ export default {
             __IS__FLAT__OPTIONS: true,
             value: optionStack.map(item => item[this.valueKey]),
             label: this.renderFilteredOptionLabel(value, optionStack),
-            disabled: optionStack.some(item => item[this.disabledKey])
+            disabled: optionStack.some(item => item[this.disabledKey]),
+            disableSelect: optionStack.some(item => item[this.disableSelectKey])
           };
         });
       } else {
@@ -407,6 +413,11 @@ export default {
       this.menuVisible = false;
     },
     handleClick() {
+      if (!this.inputValue) {
+        this.menu.filterInLevel = this.filterInLevel;
+      } else {
+        this.menu.filterInLevel = false;
+      }
       if (this.cascaderDisabled) return;
       this.$refs.input.focus();
       if (this.filterable) {
@@ -428,6 +439,11 @@ export default {
 
   created() {
     this.debouncedInputChange = debounce(this.debounce, value => {
+      if (!value) {
+        this.menu.filterInLevel = this.filterInLevel;
+      } else {
+        this.menu.filterInLevel = false;
+      }
       const before = this.beforeFilter(value);
 
       if (before && before.then) {

@@ -2,11 +2,12 @@
   import { isDef } from 'element-ui/src/utils/shared';
   import scrollIntoView from 'element-ui/src/utils/scroll-into-view';
   import { generateId } from 'element-ui/src/utils/util';
+  import debounce from 'throttle-debounce/debounce';
 
   const copyArray = (arr, props) => {
     if (!arr || !Array.isArray(arr) || !props) return arr;
     const result = [];
-    const configurableProps = ['__IS__FLAT__OPTIONS', 'label', 'value', 'disabled'];
+    const configurableProps = ['__IS__FLAT__OPTIONS', 'label', 'value', 'disabled', 'disableSelect'];
     const childrenProp = props.children || 'children';
     arr.forEach(item => {
       const itemCopy = {};
@@ -44,7 +45,9 @@
         hoverTimer: 0,
         clicking: false,
         id: generateId(),
-        selectAllLevels: false
+        selectAllLevels: false,
+        filterInLevel: false,
+        filterStr: []
       };
     },
 
@@ -67,7 +70,7 @@
         cache: false,
         get() {
           const activeValue = this.activeValue;
-          const configurableProps = ['label', 'value', 'children', 'disabled'];
+          const configurableProps = ['label', 'value', 'children', 'disabled', 'disableSelect'];
 
           const formatOptions = options => {
             options.forEach(option => {
@@ -172,12 +175,14 @@
           }
         }
       };
-
       const menus = this._l(activeOptions, (menu, menuIndex) => {
         let isFlat = false;
         const menuId = `menu-${this.id}-${ menuIndex}`;
         const ownsId = `menu-${this.id}-${ menuIndex + 1 }`;
         const items = this._l(menu, item => {
+          if (this.filterInLevel && this.filterStr[menuIndex] && item.label.indexOf(this.filterStr[menuIndex].toLowerCase()) < 0 && item.label.indexOf(this.filterStr[menuIndex].toUpperCase()) < 0) {
+            return;
+          }
           const events = {
             on: {}
           };
@@ -252,7 +257,7 @@
                 this.clicking = true;
               };
               events.on['focus'] = () => { // focus 选中
-                if (this.selectAllLevels) { // edit start
+                if (this.selectAllLevels && !item.disableSelect) { // edit start
                   this.select(item, menuIndex);
                   this.$nextTick(() => this.scrollMenu(this.$refs.menus[menuIndex]));
                 } // end
@@ -294,6 +299,23 @@
             </li>
           );
         });
+        let inputFilter = '';
+        if (this.filterInLevel) {
+          const inputEvent = {
+            on: {}
+          };
+          inputEvent.on['input'] = debounce(300, (event) => {
+            let filterIndex = event.target.getAttribute('index') - '';
+            this.filterStr[filterIndex] = event.target.value;
+            // console.log('input changeddd', this.filterStr, event);
+            this.activeItem(menu[0], menuIndex);
+          });
+          inputFilter = this._l([0], (item) => {
+            return (
+              <input type="text" {...inputEvent} index={menuIndex} class="level-filter"/>
+            );
+          });
+        }
         let menuStyle = {};
         if (isFlat) {
           menuStyle.minWidth = this.inputWidth + 'px';
@@ -323,6 +345,7 @@
             role="menu"
             id = { menuId }
           >
+            {inputFilter}
             {items}
             {
               isHoveredMenu
